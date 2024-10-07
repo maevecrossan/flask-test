@@ -5,11 +5,14 @@ import os
 import json
 #imports the flask class
 #imports render_template
-from flask import Flask, render_template
+from flask import Flask, render_template, request, flash
+if os.path.exists("env.py"):
+    import env
 
 #creating instance of it in a variable called 'app'. 
 # Only one argument, so can use the python variable __name__.
 app = Flask(__name__) 
+app.secret_key = os.environ.get("SECRET_KEY")
 
 # @ = pie decorator. A way of wrapping functions.
 # When trying to browse root directory ("/"), Flask triggers the index function underneath and returns render_template("index.html").ie displays the home page.
@@ -27,8 +30,22 @@ def about(): # view is called inside html file
     return render_template("about.html", page_title="About", company=data) # new 'company' variable is equal to the list of data being loaded the the json file.
 
 
-@app.route("/contact")
+@app.route("/about/<member_name>")
+def about_member(member_name):
+    member = {}
+    with open("data/company.json", "r") as json_data:
+        data = json.load(json_data)
+        for obj in data:
+            if obj["url"] == member_name:
+                member = obj
+    return render_template("member.html", member=member) # 1st member is member.html file, 2nd is is variable created earlier in the function.
+
+
+@app.route("/contact", methods=["GET", "POST"]) # ensures both methods will be handled.
 def contact(): # view is called inside html file
+    if request.method == "POST":
+        flash("Thanks {}, we have received your message!".format(
+            request.form.get("name")))
     return render_template("contact.html", page_title="Contact")
 
 
